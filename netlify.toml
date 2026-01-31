@@ -1,5 +1,5 @@
 [build]
-  command = "npm run build"
+  command = "npx prisma db push --schema prisma/schema.prisma && npx prisma generate --schema prisma/schema.prisma && astro build"
   publish = "dist"
 
 [build.environment]
