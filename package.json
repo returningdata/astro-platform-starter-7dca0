@@ -14,7 +14,7 @@
   "dependencies": {
     "@auth/core": "^0.37.4",
     "@prisma/client": "^5.22.0",
-    "@astrojs/netlify": "^6.5.2",
+    "@astrojs/netlify": "^5.5.4",
     "astro": "^4.16.15",
     "prisma": "^5.22.0"
   },
