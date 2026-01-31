@@ -1,0 +1,39 @@
+---
+import { prisma } from "../../../lib/db";
+import { getSessionFromRequest } from "../../../lib/auth";
+
+const session = await getSessionFromRequest(Astro.request);
+const discordId = session?.discordId;
+if (!discordId) return Astro.redirect("/api/auth/signin");
+
+const user = await prisma.user.upsert({ where: { discordId: String(discordId) }, update: {}, create: { discordId: String(discordId) }});
+const network = await prisma.network.findFirst({ where: { ownerId: user.id } });
+if (!network) return Astro.redirect("/dashboard");
+
+const roles = await prisma.networkRole.findMany({ where: { networkId: network.id }, orderBy: { createdAt: "desc" } });
+const msg = Astro.url.searchParams.get("msg");
+---
+<html lang="en">
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Roles</title></head>
+<body style="font-family: system-ui; margin: 40px;">
+  <h1>Network roles</h1>
+  <p><a href="/dashboard">← Dashboard</a></p>
+  {msg && <p style="color: green;">{msg}</p>}
+
+  <form method="post" action="/api/network/roles/create" style="display:flex; gap:8px; align-items:center; margin: 16px 0;">
+    <input name="name" placeholder="Role name" style="padding:8px; width:240px;" />
+    <input name="description" placeholder="Description (optional)" style="padding:8px; width:360px;" />
+    <button style="padding:8px 12px;">Create</button>
+  </form>
+
+  <ul>
+    {roles.map(r => (
+      <li>
+        <b>{r.name}</b> — {r.description || ""}
+        {" "}<a href={`/dashboard/roles/mapping?id=${r.id}`}>Mapping</a>
+      </li>
+    ))}
+  </ul>
+</body>
+</html>

@@ -1,0 +1,56 @@
+---
+import { prisma } from "../../../lib/db";
+import { getSessionFromRequest } from "../../../lib/auth";
+
+const session = await getSessionFromRequest(Astro.request);
+const discordId = session?.discordId;
+if (!discordId) return Astro.redirect("/api/auth/signin");
+
+const roleId = Astro.url.searchParams.get("id") || "";
+if (!roleId) return Astro.redirect("/dashboard/roles");
+
+const user = await prisma.user.upsert({ where: { discordId: String(discordId) }, update: {}, create: { discordId: String(discordId) }});
+const network = await prisma.network.findFirst({ where: { ownerId: user.id }, include: { guilds: true } });
+if (!network) return Astro.redirect("/dashboard");
+
+const role = await prisma.networkRole.findFirst({ where: { id: roleId, networkId: network.id } });
+if (!role) return Astro.redirect("/dashboard/roles");
+
+const mappings = await prisma.roleMapping.findMany({ where: { networkRoleId: role.id }, include: { guild: true }});
+const byGuild = new Map(mappings.map(m => [m.guildId, m]));
+---
+<html lang="en">
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Role mapping</title></head>
+<body style="font-family: system-ui; margin: 40px;">
+  <h1>Mapping: {role.name}</h1>
+  <p><a href="/dashboard/roles">← Roles</a></p>
+  <p>Paste a Discord Role ID for each linked server.</p>
+
+  <table border="1" cellpadding="8" style="border-collapse: collapse; margin-top: 12px;">
+    <tr><th>Server</th><th>Guild ID</th><th>Role ID</th><th>Required</th><th>Save</th></tr>
+    {network.guilds.map(g => {
+      const m = byGuild.get(g.id);
+      return (
+        <tr>
+          <td>{g.guildName}</td>
+          <td style="font-family: ui-monospace;">{g.guildDiscordId}</td>
+          <td>
+            <form method="post" action="/api/network/roles/map" style="display:flex; gap:8px; align-items:center;">
+              <input type="hidden" name="networkRoleId" value={role.id} />
+              <input type="hidden" name="guildId" value={g.id} />
+              <input name="roleDiscordId" value={m?.roleDiscordId || ""} placeholder="123..." style="padding:6px; width:240px;" />
+          </td>
+          <td style="text-align:center;">
+              <input type="checkbox" name="required" checked={m?.required || false} />
+          </td>
+          <td>
+              <button style="padding:6px 10px;">Save</button>
+            </form>
+          </td>
+        </tr>
+      );
+    })}
+  </table>
+</body>
+</html>

@@ -1,0 +1,42 @@
+---
+import { prisma } from "../../../lib/db";
+import { getSessionFromRequest } from "../../../lib/auth";
+
+const session = await getSessionFromRequest(Astro.request);
+const discordId = session?.discordId;
+if (!discordId) return Astro.redirect("/api/auth/signin");
+
+const user = await prisma.user.upsert({ where: { discordId: String(discordId) }, update: {}, create: { discordId: String(discordId) }});
+const network = await prisma.network.findFirst({ where: { ownerId: user.id } });
+if (!network) return Astro.redirect("/dashboard");
+
+const actions = await prisma.syncAction.findMany({ where: { networkId: network.id }, orderBy: { createdAt: "desc" }, take: 50 });
+---
+<html lang="en">
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Sync</title></head>
+<body style="font-family: system-ui; margin: 40px;">
+  <h1>Sync</h1>
+  <p><a href="/dashboard">← Dashboard</a></p>
+
+  <form method="post" action="/api/network/sync/run" style="margin: 16px 0;">
+    <button style="padding:8px 12px;">Enqueue Sync Actions</button>
+  </form>
+
+  <h3>Recent sync actions</h3>
+  <table border="1" cellpadding="6" style="border-collapse: collapse; font-size: 13px;">
+    <tr><th>Type</th><th>Status</th><th>Guild</th><th>User</th><th>Role</th><th>Error</th><th>Created</th></tr>
+    {actions.map(a => (
+      <tr>
+        <td>{a.type}</td>
+        <td>{a.status}</td>
+        <td style="font-family: ui-monospace;">{a.guildDiscordId}</td>
+        <td style="font-family: ui-monospace;">{a.userDiscordId}</td>
+        <td style="font-family: ui-monospace;">{a.roleDiscordId}</td>
+        <td>{a.error || ""}</td>
+        <td>{new Date(a.createdAt).toLocaleString()}</td>
+      </tr>
+    ))}
+  </table>
+</body>
+</html>
