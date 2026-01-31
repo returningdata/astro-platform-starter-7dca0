@@ -6,8 +6,8 @@ const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID!;
 const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET!;
 const PUBLIC_APP_URL = process.env.PUBLIC_APP_URL!;
 
-export function authHandler(req: Request) {
-  return Auth(req, {
+export async function authHandler(req: Request) {
+  const res = await Auth(req, {
     basePath: "/api/auth",
     secret: AUTH_SECRET,
     trustHost: true,
@@ -41,6 +41,21 @@ export function authHandler(req: Request) {
       },
     },
   });
+
+  // Auth.js returns HTTP 500 for error pages which causes issues.
+  // If the response is the error page, change status to 200 so the page renders properly.
+  if (res.status === 500) {
+    const contentType = res.headers.get("content-type") || "";
+    if (contentType.includes("text/html")) {
+      // This is an Auth.js error page, return with 200 status instead
+      return new Response(res.body, {
+        status: 200,
+        headers: res.headers,
+      });
+    }
+  }
+
+  return res;
 }
 
 export async function getSessionFromRequest(request: Request) {
