@@ -35,9 +35,10 @@ export async function authHandler(req: Request) {
         return session;
       },
       async redirect({ url }) {
-        if (url.startsWith("/")) return `${PUBLIC_APP_URL}${url}`;
+        const baseUrl = PUBLIC_APP_URL.replace(/\/$/, "");
+        if (url.startsWith("/")) return `${baseUrl}${url}`;
         if (url.startsWith(PUBLIC_APP_URL)) return url;
-        return PUBLIC_APP_URL;
+        return baseUrl;
       },
     },
   });
@@ -59,10 +60,16 @@ export async function authHandler(req: Request) {
 }
 
 export async function getSessionFromRequest(request: Request) {
-  const u = new URL(request.url);
-  const sessionUrl = new URL("/api/auth/session", u.origin);
-  const sessionReq = new Request(sessionUrl.toString(), { headers: request.headers });
-  const res = await authHandler(sessionReq);
-  if (!res.ok) return null;
-  return await res.json();
+  try {
+    const u = new URL(request.url);
+    const sessionUrl = new URL("/api/auth/session", u.origin);
+    const sessionReq = new Request(sessionUrl.toString(), { headers: request.headers });
+    const res = await authHandler(sessionReq);
+    if (!res.ok) return null;
+    const text = await res.text();
+    if (!text) return null;
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
 }
