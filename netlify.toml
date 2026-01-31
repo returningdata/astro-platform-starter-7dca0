@@ -1,0 +1,9 @@
+[build]
+  command = "npx prisma db push --schema prisma/schema.prisma && npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20.11.1"
+
+[functions]
+  node_bundler = "esbuild"

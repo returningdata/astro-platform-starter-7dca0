@@ -1,0 +1,27 @@
+{
+  "name": "sector-astro-panel-netlify",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "prisma generate && astro build",
+    "preview": "astro preview",
+    "postinstall": "prisma generate",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate:dev": "prisma migrate dev",
+    "prisma:migrate:deploy": "prisma migrate deploy"
+  },
+  "dependencies": {
+    "@auth/core": "^0.37.4",
+    "@prisma/client": "^5.22.0",
+    "astro": "^4.16.19"
+  },
+  "devDependencies": {
+    "prisma": "^5.22.0",
+    "typescript": "^5.5.4",
+    "@astrojs/netlify": "^6.6.4"
+  },
+  "engines": {
+    "node": "20.x"
+  }
+}

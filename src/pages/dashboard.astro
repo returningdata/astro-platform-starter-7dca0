@@ -1,0 +1,53 @@
+---
+import { prisma } from "../lib/db";
+import { getSessionFromRequest } from "../lib/auth";
+
+const session = await getSessionFromRequest(Astro.request);
+const discordId = session?.discordId;
+
+if (!discordId) return Astro.redirect("/api/auth/signin");
+
+const user = await prisma.user.upsert({
+  where: { discordId: String(discordId) },
+  update: { username: session?.user?.name || null, avatarUrl: session?.avatarUrl || null },
+  create: { discordId: String(discordId), username: session?.user?.name || null, avatarUrl: session?.avatarUrl || null }
+});
+
+const network = await prisma.network.findFirst({
+  where: { ownerId: user.id },
+  include: { guilds: true, roles: true }
+});
+---
+<html lang="en">
+  <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Dashboard</title>
+  </head>
+  <body style="font-family: system-ui; margin: 40px;">
+    <h1>Dashboard</h1>
+    <p>Signed in as <b>{session?.user?.name || user.discordId}</b></p>
+
+    <nav style="display:flex; gap:12px; margin: 16px 0;">
+      <a href="/dashboard/roles">Roles</a>
+      <a href="/dashboard/members">Members</a>
+      <a href="/dashboard/sync">Sync</a>
+      <a href="/api/auth/signout">Sign out</a>
+    </nav>
+
+    <h2>Network</h2>
+    {network ? (
+      <div style="padding:12px; border:1px solid #ddd; border-radius:12px; max-width:900px;">
+        <p><b>Name:</b> {network.name}</p>
+        <p><b>Linked servers:</b> {network.guilds.length}</p>
+        <ul>
+          {network.guilds.map(g => <li>{g.guildName} <span style="font-family: ui-monospace;">({g.guildDiscordId})</span></li>)}
+        </ul>
+        <p><b>Network roles:</b> {network.roles.length}</p>
+        {network.guilds.length === 0 && <p>Run <b>/authorize</b> in a server to link it.</p>}
+      </div>
+    ) : (
+      <p>No network yet. Run <b>/authorize</b> in a server to link it.</p>
+    )}
+
+    <p style="margin-top:16px;">Need to link a server? Use the bot command <b>/authorize</b> inside that server.</p>
+  </body>
+</html>

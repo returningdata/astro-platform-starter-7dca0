@@ -1,0 +1,21 @@
+---
+const code = Astro.url.searchParams.get("code") || "";
+---
+<html lang="en">
+  <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Authorize Server</title>
+  </head>
+  <body style="font-family: system-ui; margin: 40px;">
+    <h1>Authorize server</h1>
+    <p>Sign in, then redeem the code from <b>/authorize</b> (bot).</p>
+    <div style="margin-top:16px; padding:12px; border:1px solid #ddd; border-radius:12px; max-width:720px;">
+      <p><b>1)</b> <a href="/api/auth/signin">Sign in with Discord</a></p>
+      <p><b>2)</b> Redeem</p>
+      <form method="post" action="/api/authorize/redeem" style="display:flex; gap:8px; align-items:center;">
+        <input type="text" name="code" value={code} placeholder="paste code" style="width:420px; padding:8px;" />
+        <button style="padding:8px 12px;">Redeem</button>
+      </form>
+    </div>
+    <p style="margin-top:16px;"><a href="/dashboard">Dashboard</a></p>
+  </body>
+</html>
