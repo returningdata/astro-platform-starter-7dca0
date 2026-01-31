@@ -15,10 +15,10 @@
     "@auth/core": "^0.37.4",
     "@prisma/client": "^5.22.0",
     "@astrojs/netlify": "^6.5.2",
-    "astro": "^4.16.15"
+    "astro": "^4.16.15",
+    "prisma": "^5.22.0"
   },
   "devDependencies": {
-    "prisma": "^5.22.0",
     "typescript": "^5.5.4"
   },
   "engines": {
