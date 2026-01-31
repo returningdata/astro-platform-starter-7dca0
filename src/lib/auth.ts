@@ -1,13 +1,14 @@
 import { Auth } from "@auth/core";
 import Discord from "@auth/core/providers/discord";
 
-const AUTH_SECRET = process.env.AUTH_SECRET!;
+const AUTH_SECRET = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET!;
 const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID!;
 const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET!;
 const PUBLIC_APP_URL = process.env.PUBLIC_APP_URL!;
 
 export function authHandler(req: Request) {
   return Auth(req, {
+    basePath: "/api/auth",
     secret: AUTH_SECRET,
     trustHost: true,
     providers: [
