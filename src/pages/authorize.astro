@@ -1,21 +1,209 @@
 ---
 const code = Astro.url.searchParams.get("code") || "";
+const error = Astro.url.searchParams.get("error") || "";
 ---
 <html lang="en">
-  <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Authorize Server</title>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Authorize Server - KL Network</title>
+    <style>
+      :root {
+        --color-bg: #0f172a;
+        --color-surface: #1e293b;
+        --color-border: #334155;
+        --color-text: #f1f5f9;
+        --color-text-muted: #94a3b8;
+        --color-primary: #6366f1;
+        --color-primary-hover: #818cf8;
+        --color-danger: #ef4444;
+        --radius: 8px;
+      }
+
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: var(--color-bg);
+        color: var(--color-text);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+
+      .container {
+        max-width: 480px;
+        width: 100%;
+      }
+
+      .logo {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--color-primary);
+        text-decoration: none;
+        margin-bottom: 32px;
+        display: block;
+      }
+
+      h1 {
+        font-size: 28px;
+        font-weight: 600;
+        margin-bottom: 8px;
+      }
+
+      .subtitle {
+        color: var(--color-text-muted);
+        margin-bottom: 32px;
+      }
+
+      .card {
+        background: var(--color-surface);
+        border-radius: var(--radius);
+        padding: 24px;
+      }
+
+      .step {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+
+      .step:last-child {
+        margin-bottom: 0;
+      }
+
+      .step-number {
+        width: 28px;
+        height: 28px;
+        background: var(--color-bg);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--color-primary);
+        flex-shrink: 0;
+      }
+
+      .step-content {
+        flex: 1;
+      }
+
+      .step-title {
+        font-weight: 500;
+        margin-bottom: 8px;
+      }
+
+      .step a {
+        color: var(--color-primary);
+        text-decoration: none;
+        font-weight: 500;
+      }
+
+      .step a:hover {
+        text-decoration: underline;
+      }
+
+      input[type="text"] {
+        width: 100%;
+        background: var(--color-bg);
+        border: 1px solid var(--color-border);
+        color: var(--color-text);
+        padding: 12px 14px;
+        border-radius: var(--radius);
+        font-size: 14px;
+        outline: none;
+        margin-bottom: 12px;
+      }
+
+      input[type="text"]:focus {
+        border-color: var(--color-primary);
+      }
+
+      input::placeholder {
+        color: var(--color-text-muted);
+      }
+
+      button {
+        width: 100%;
+        background: var(--color-primary);
+        color: white;
+        border: none;
+        padding: 12px 18px;
+        border-radius: var(--radius);
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+      }
+
+      button:hover {
+        background: var(--color-primary-hover);
+      }
+
+      .error {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        color: var(--color-danger);
+        padding: 12px 16px;
+        border-radius: var(--radius);
+        margin-bottom: 24px;
+        font-size: 14px;
+      }
+
+      .footer {
+        text-align: center;
+        margin-top: 24px;
+      }
+
+      .footer a {
+        color: var(--color-text-muted);
+        text-decoration: none;
+        font-size: 14px;
+      }
+
+      .footer a:hover {
+        color: var(--color-text);
+      }
+    </style>
   </head>
-  <body style="font-family: system-ui; margin: 40px;">
-    <h1>Authorize server</h1>
-    <p>Sign in, then redeem the code from <b>/authorize</b> (bot).</p>
-    <div style="margin-top:16px; padding:12px; border:1px solid #ddd; border-radius:12px; max-width:720px;">
-      <p><b>1)</b> <a href="/api/auth/signin">Sign in with Discord</a></p>
-      <p><b>2)</b> Redeem</p>
-      <form method="post" action="/api/authorize/redeem" style="display:flex; gap:8px; align-items:center;">
-        <input type="text" name="code" value={code} placeholder="paste code" style="width:420px; padding:8px;" />
-        <button style="padding:8px 12px;">Redeem</button>
-      </form>
+  <body>
+    <div class="container">
+      <a href="/" class="logo">KL Network</a>
+      <h1>Authorize Server</h1>
+      <p class="subtitle">Link a Discord server to your network.</p>
+
+      {error && <div class="error">{error}</div>}
+
+      <div class="card">
+        <div class="step">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <div class="step-title">Sign in with Discord</div>
+            <a href="/api/auth/signin">Sign in &rarr;</a>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <div class="step-title">Enter authorization code</div>
+            <p style="color: var(--color-text-muted); font-size: 13px; margin-bottom: 12px;">
+              Paste the code from the <strong>/authorize</strong> bot command.
+            </p>
+            <form method="post" action="/api/authorize/redeem">
+              <input type="text" name="code" value={code} placeholder="Paste authorization code" autocomplete="off" />
+              <button type="submit">Redeem Code</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer">
+        <a href="/dashboard">Go to Dashboard</a>
+      </div>
     </div>
-    <p style="margin-top:16px;"><a href="/dashboard">Dashboard</a></p>
   </body>
 </html>

@@ -1,4 +1,5 @@
 ---
+import DashboardLayout from "../layouts/DashboardLayout.astro";
 import { prisma } from "../lib/db";
 import { getSessionFromRequest } from "../lib/auth";
 
@@ -18,36 +19,62 @@ const network = await prisma.network.findFirst({
   include: { guilds: true, roles: true }
 });
 ---
-<html lang="en">
-  <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Dashboard</title>
-  </head>
-  <body style="font-family: system-ui; margin: 40px;">
-    <h1>Dashboard</h1>
-    <p>Signed in as <b>{session?.user?.name || user.discordId}</b></p>
+<DashboardLayout
+  title="Dashboard"
+  username={session?.user?.name || user.discordId}
+  avatarUrl={session?.avatarUrl}
+>
+  <h1 class="page-title">Overview</h1>
 
-    <nav style="display:flex; gap:12px; margin: 16px 0;">
-      <a href="/dashboard/roles">Roles</a>
-      <a href="/dashboard/members">Members</a>
-      <a href="/dashboard/sync">Sync</a>
-      <a href="/api/auth/signout">Sign out</a>
-    </nav>
+  {network ? (
+    <div class="card">
+      <div class="card-title">Network: {network.name}</div>
 
-    <h2>Network</h2>
-    {network ? (
-      <div style="padding:12px; border:1px solid #ddd; border-radius:12px; max-width:900px;">
-        <p><b>Name:</b> {network.name}</p>
-        <p><b>Linked servers:</b> {network.guilds.length}</p>
-        <ul>
-          {network.guilds.map(g => <li>{g.guildName} <span style="font-family: ui-monospace;">({g.guildDiscordId})</span></li>)}
-        </ul>
-        <p><b>Network roles:</b> {network.roles.length}</p>
-        {network.guilds.length === 0 && <p>Run <b>/authorize</b> in a server to link it.</p>}
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
+        <div style="background: var(--color-bg); padding: 16px; border-radius: var(--radius);">
+          <div style="font-size: 28px; font-weight: 600;">{network.guilds.length}</div>
+          <div style="color: var(--color-text-muted); font-size: 14px;">Linked Servers</div>
+        </div>
+        <div style="background: var(--color-bg); padding: 16px; border-radius: var(--radius);">
+          <div style="font-size: 28px; font-weight: 600;">{network.roles.length}</div>
+          <div style="color: var(--color-text-muted); font-size: 14px;">Network Roles</div>
+        </div>
       </div>
-    ) : (
-      <p>No network yet. Run <b>/authorize</b> in a server to link it.</p>
-    )}
 
-    <p style="margin-top:16px;">Need to link a server? Use the bot command <b>/authorize</b> inside that server.</p>
-  </body>
-</html>
+      {network.guilds.length > 0 ? (
+        <>
+          <div class="card-title" style="margin-top: 24px;">Linked Servers</div>
+          <ul class="item-list">
+            {network.guilds.map(g => (
+              <li>
+                <span class="item-name">{g.guildName}</span>
+                <span class="mono">{g.guildDiscordId}</span>
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : (
+        <div class="empty-state">
+          <p>No servers linked yet.</p>
+          <p style="font-size: 13px;">Run <strong>/authorize</strong> in a Discord server to link it to your network.</p>
+        </div>
+      )}
+    </div>
+  ) : (
+    <div class="card">
+      <div class="empty-state">
+        <p>No network created yet.</p>
+        <p style="font-size: 13px;">Run <strong>/authorize</strong> in a Discord server to create your network and link your first server.</p>
+      </div>
+    </div>
+  )}
+
+  <div class="card" style="margin-top: 24px;">
+    <div class="card-title">Quick Actions</div>
+    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+      <a href="/dashboard/roles" class="btn">Manage Roles</a>
+      <a href="/dashboard/members" class="btn btn-secondary">Manage Members</a>
+      <a href="/dashboard/sync" class="btn btn-secondary">View Sync Status</a>
+    </div>
+  </div>
+</DashboardLayout>

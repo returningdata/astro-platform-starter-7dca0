@@ -1,4 +1,5 @@
 ---
+import DashboardLayout from "../../../layouts/DashboardLayout.astro";
 import { prisma } from "../../../lib/db";
 import { getSessionFromRequest } from "../../../lib/auth";
 
@@ -11,32 +12,102 @@ const network = await prisma.network.findFirst({ where: { ownerId: user.id } });
 if (!network) return Astro.redirect("/dashboard");
 
 const actions = await prisma.syncAction.findMany({ where: { networkId: network.id }, orderBy: { createdAt: "desc" }, take: 50 });
+
+const statusCounts = {
+  PENDING: actions.filter(a => a.status === 'PENDING').length,
+  PROCESSING: actions.filter(a => a.status === 'PROCESSING').length,
+  DONE: actions.filter(a => a.status === 'DONE').length,
+  FAILED: actions.filter(a => a.status === 'FAILED').length,
+};
 ---
-<html lang="en">
-<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Sync</title></head>
-<body style="font-family: system-ui; margin: 40px;">
-  <h1>Sync</h1>
-  <p><a href="/dashboard">← Dashboard</a></p>
+<DashboardLayout
+  title="Sync"
+  username={session?.user?.name || user.discordId}
+  avatarUrl={session?.avatarUrl}
+>
+  <h1 class="page-title">Sync Actions</h1>
+  <p style="color: var(--color-text-muted); margin-bottom: 24px;">Monitor role synchronization across your network servers.</p>
 
-  <form method="post" action="/api/network/sync/run" style="margin: 16px 0;">
-    <button style="padding:8px 12px;">Enqueue Sync Actions</button>
-  </form>
+  <div class="card">
+    <div class="card-title">Trigger Sync</div>
+    <p style="color: var(--color-text-muted); font-size: 14px; margin-bottom: 16px;">
+      Enqueue sync actions to apply all current role grants to Discord servers.
+    </p>
+    <form method="post" action="/api/network/sync/run">
+      <button type="submit">Enqueue Sync Actions</button>
+    </form>
+  </div>
 
-  <h3>Recent sync actions</h3>
-  <table border="1" cellpadding="6" style="border-collapse: collapse; font-size: 13px;">
-    <tr><th>Type</th><th>Status</th><th>Guild</th><th>User</th><th>Role</th><th>Error</th><th>Created</th></tr>
-    {actions.map(a => (
-      <tr>
-        <td>{a.type}</td>
-        <td>{a.status}</td>
-        <td style="font-family: ui-monospace;">{a.guildDiscordId}</td>
-        <td style="font-family: ui-monospace;">{a.userDiscordId}</td>
-        <td style="font-family: ui-monospace;">{a.roleDiscordId}</td>
-        <td>{a.error || ""}</td>
-        <td>{new Date(a.createdAt).toLocaleString()}</td>
-      </tr>
-    ))}
-  </table>
-</body>
-</html>
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin-bottom: 24px;">
+    <div class="card" style="text-align: center; padding: 16px;">
+      <div style="font-size: 24px; font-weight: 600;">{statusCounts.PENDING}</div>
+      <div style="font-size: 12px; color: var(--color-text-muted);">Pending</div>
+    </div>
+    <div class="card" style="text-align: center; padding: 16px;">
+      <div style="font-size: 24px; font-weight: 600;">{statusCounts.PROCESSING}</div>
+      <div style="font-size: 12px; color: var(--color-text-muted);">Processing</div>
+    </div>
+    <div class="card" style="text-align: center; padding: 16px;">
+      <div style="font-size: 24px; font-weight: 600; color: var(--color-success);">{statusCounts.DONE}</div>
+      <div style="font-size: 12px; color: var(--color-text-muted);">Completed</div>
+    </div>
+    <div class="card" style="text-align: center; padding: 16px;">
+      <div style="font-size: 24px; font-weight: 600; color: var(--color-danger);">{statusCounts.FAILED}</div>
+      <div style="font-size: 12px; color: var(--color-text-muted);">Failed</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Recent Actions</div>
+    {actions.length > 0 ? (
+      <div style="overflow-x: auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Status</th>
+              <th>Guild ID</th>
+              <th>User ID</th>
+              <th>Role ID</th>
+              <th>Error</th>
+              <th>Created</th>
+            </tr>
+          </thead>
+          <tbody>
+            {actions.map(a => (
+              <tr>
+                <td>
+                  <span class={`badge ${a.type === 'ADD_ROLE' ? 'badge-done' : 'badge-pending'}`}>
+                    {a.type === 'ADD_ROLE' ? 'Add' : 'Remove'}
+                  </span>
+                </td>
+                <td>
+                  <span class={`badge badge-${a.status.toLowerCase()}`}>{a.status}</span>
+                </td>
+                <td class="mono">{a.guildDiscordId}</td>
+                <td class="mono">{a.userDiscordId}</td>
+                <td class="mono">{a.roleDiscordId}</td>
+                <td style="color: var(--color-danger); font-size: 13px; max-width: 200px; overflow: hidden; text-overflow: ellipsis;">
+                  {a.error || '-'}
+                </td>
+                <td style="color: var(--color-text-muted); white-space: nowrap;">
+                  {new Date(a.createdAt).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    ) : (
+      <div class="empty-state">
+        <p>No sync actions yet.</p>
+        <p style="font-size: 13px;">Click "Enqueue Sync Actions" above to sync roles to Discord.</p>
+      </div>
+    )}
+  </div>
+</DashboardLayout>
