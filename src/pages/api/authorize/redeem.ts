@@ -13,13 +13,45 @@ export const POST: APIRoute = async ({ request }) => {
   if (!discordId) return new Response(null, { status: 302, headers: { Location: "/api/auth/signin" } });
 
   const form = await request.formData();
-  const raw = String(form.get("code") || "").trim();
+  // Normalize: trim whitespace, convert to uppercase, remove any dashes/spaces
+  const rawInput = String(form.get("code") || "");
+  const raw = rawInput.trim().toUpperCase().replace(/[\s-]/g, "");
   if (!raw) return new Response("Missing code", { status: 400 });
 
   const codeHash = hashCode(raw, PEPPER);
 
   const auth = await prisma.authCode.findUnique({ where: { codeHash } });
-  if (!auth) return new Response("Invalid code", { status: 400 });
+  if (!auth) {
+    // Try lowercase variant as fallback for backwards compatibility
+    const codeHashLower = hashCode(rawInput.trim().toLowerCase().replace(/[\s-]/g, ""), PEPPER);
+    const authLower = await prisma.authCode.findUnique({ where: { codeHash: codeHashLower } });
+    if (!authLower) return new Response("Invalid code. Make sure you copied the full code from the bot.", { status: 400 });
+    // Use the lowercase match
+    if (authLower.redeemedAt) return new Response("Code already used", { status: 400 });
+    if (new Date(authLower.expiresAt).getTime() < Date.now()) return new Response("Code expired", { status: 400 });
+
+    const user = await prisma.user.upsert({
+      where: { discordId: String(discordId) },
+      update: {},
+      create: { discordId: String(discordId) }
+    });
+
+    const network = await prisma.network.upsert({
+      where: { ownerId: user.id },
+      update: {},
+      create: { ownerId: user.id, name: "My Network" }
+    });
+
+    await prisma.guild.upsert({
+      where: { guildDiscordId: authLower.guildDiscordId },
+      update: { guildName: authLower.guildName, networkId: network.id },
+      create: { networkId: network.id, guildDiscordId: authLower.guildDiscordId, guildName: authLower.guildName }
+    });
+
+    await prisma.authCode.update({ where: { id: authLower.id }, data: { redeemedAt: new Date() } });
+
+    return new Response(null, { status: 302, headers: { Location: "/dashboard" } });
+  }
   if (auth.redeemedAt) return new Response("Code already used", { status: 400 });
   if (new Date(auth.expiresAt).getTime() < Date.now()) return new Response("Code expired", { status: 400 });
 

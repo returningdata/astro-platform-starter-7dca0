@@ -1,0 +1,400 @@
+---
+interface Props {
+  title: string;
+  username?: string;
+  avatarUrl?: string;
+  backLink?: { href: string; label: string };
+}
+
+const { title, username, avatarUrl, backLink } = Astro.props;
+---
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>{title} - KL Network</title>
+    <style>
+      :root {
+        --color-bg: #0f172a;
+        --color-surface: #1e293b;
+        --color-surface-hover: #334155;
+        --color-border: #334155;
+        --color-text: #f1f5f9;
+        --color-text-muted: #94a3b8;
+        --color-primary: #6366f1;
+        --color-primary-hover: #818cf8;
+        --color-success: #22c55e;
+        --color-danger: #ef4444;
+        --radius: 8px;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        background: var(--color-bg);
+        color: var(--color-text);
+        line-height: 1.6;
+        min-height: 100vh;
+      }
+
+      .dashboard-container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+
+      .dashboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 32px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--color-border);
+      }
+
+      .header-left {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .logo {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--color-primary);
+        text-decoration: none;
+      }
+
+      .header-right {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .user-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .user-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: var(--color-surface);
+      }
+
+      .user-name {
+        color: var(--color-text-muted);
+        font-size: 14px;
+      }
+
+      .nav-links {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 24px;
+      }
+
+      .nav-link {
+        padding: 10px 18px;
+        background: var(--color-surface);
+        color: var(--color-text);
+        text-decoration: none;
+        border-radius: var(--radius);
+        font-size: 14px;
+        font-weight: 500;
+        transition: background 0.15s;
+      }
+
+      .nav-link:hover {
+        background: var(--color-surface-hover);
+      }
+
+      .nav-link.active {
+        background: var(--color-primary);
+      }
+
+      .sign-out-link {
+        color: var(--color-text-muted);
+        text-decoration: none;
+        font-size: 14px;
+        padding: 8px 12px;
+        border-radius: var(--radius);
+        transition: color 0.15s;
+      }
+
+      .sign-out-link:hover {
+        color: var(--color-text);
+      }
+
+      .page-title {
+        font-size: 28px;
+        font-weight: 600;
+        margin-bottom: 8px;
+      }
+
+      .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--color-text-muted);
+        text-decoration: none;
+        font-size: 14px;
+        margin-bottom: 20px;
+        transition: color 0.15s;
+      }
+
+      .back-link:hover {
+        color: var(--color-text);
+      }
+
+      .content {
+        margin-top: 24px;
+      }
+
+      /* Card styles */
+      .card {
+        background: var(--color-surface);
+        border-radius: var(--radius);
+        padding: 20px;
+        margin-bottom: 20px;
+      }
+
+      .card-title {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 16px;
+        color: var(--color-text);
+      }
+
+      /* Form styles */
+      .form-row {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      input[type="text"],
+      input[type="email"],
+      select {
+        background: var(--color-bg);
+        border: 1px solid var(--color-border);
+        color: var(--color-text);
+        padding: 10px 14px;
+        border-radius: var(--radius);
+        font-size: 14px;
+        outline: none;
+        transition: border-color 0.15s;
+      }
+
+      input[type="text"]:focus,
+      input[type="email"]:focus,
+      select:focus {
+        border-color: var(--color-primary);
+      }
+
+      input::placeholder {
+        color: var(--color-text-muted);
+      }
+
+      button, .btn {
+        background: var(--color-primary);
+        color: white;
+        border: none;
+        padding: 10px 18px;
+        border-radius: var(--radius);
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.15s;
+        text-decoration: none;
+        display: inline-block;
+      }
+
+      button:hover, .btn:hover {
+        background: var(--color-primary-hover);
+      }
+
+      button.btn-danger {
+        background: var(--color-danger);
+      }
+
+      button.btn-danger:hover {
+        background: #dc2626;
+      }
+
+      button.btn-secondary {
+        background: var(--color-surface);
+        color: var(--color-text);
+      }
+
+      button.btn-secondary:hover {
+        background: var(--color-surface-hover);
+      }
+
+      /* Table styles */
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+
+      th, td {
+        padding: 12px 16px;
+        text-align: left;
+        border-bottom: 1px solid var(--color-border);
+      }
+
+      th {
+        color: var(--color-text-muted);
+        font-weight: 500;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      tr:hover td {
+        background: rgba(99, 102, 241, 0.05);
+      }
+
+      .mono {
+        font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+        font-size: 13px;
+        color: var(--color-text-muted);
+      }
+
+      /* List styles */
+      .item-list {
+        list-style: none;
+      }
+
+      .item-list li {
+        padding: 12px 16px;
+        background: var(--color-bg);
+        border-radius: var(--radius);
+        margin-bottom: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .item-name {
+        font-weight: 500;
+      }
+
+      .item-desc {
+        color: var(--color-text-muted);
+        font-size: 13px;
+        margin-left: 8px;
+      }
+
+      /* Status badges */
+      .badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 9999px;
+        font-size: 12px;
+        font-weight: 500;
+      }
+
+      .badge-pending {
+        background: rgba(234, 179, 8, 0.2);
+        color: #fbbf24;
+      }
+
+      .badge-processing {
+        background: rgba(59, 130, 246, 0.2);
+        color: #60a5fa;
+      }
+
+      .badge-done {
+        background: rgba(34, 197, 94, 0.2);
+        color: #4ade80;
+      }
+
+      .badge-failed {
+        background: rgba(239, 68, 68, 0.2);
+        color: #f87171;
+      }
+
+      /* Message styles */
+      .message {
+        padding: 12px 16px;
+        border-radius: var(--radius);
+        margin-bottom: 16px;
+        font-size: 14px;
+      }
+
+      .message-success {
+        background: rgba(34, 197, 94, 0.1);
+        color: var(--color-success);
+        border: 1px solid rgba(34, 197, 94, 0.2);
+      }
+
+      .message-error {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--color-danger);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+      }
+
+      /* Empty state */
+      .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: var(--color-text-muted);
+      }
+
+      .empty-state p {
+        margin-bottom: 16px;
+      }
+
+      /* Checkbox styling */
+      input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        accent-color: var(--color-primary);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="dashboard-container">
+      <header class="dashboard-header">
+        <div class="header-left">
+          <a href="/dashboard" class="logo">KL Network</a>
+        </div>
+        <div class="header-right">
+          {username && (
+            <div class="user-info">
+              {avatarUrl && <img src={avatarUrl} alt="" class="user-avatar" />}
+              <span class="user-name">{username}</span>
+            </div>
+          )}
+          <a href="/api/auth/signout" class="sign-out-link">Sign out</a>
+        </div>
+      </header>
+
+      <nav class="nav-links">
+        <a href="/dashboard" class="nav-link">Overview</a>
+        <a href="/dashboard/roles" class="nav-link">Roles</a>
+        <a href="/dashboard/members" class="nav-link">Members</a>
+        <a href="/dashboard/sync" class="nav-link">Sync</a>
+      </nav>
+
+      {backLink && (
+        <a href={backLink.href} class="back-link">
+          <span>&larr;</span> {backLink.label}
+        </a>
+      )}
+
+      <main class="content">
+        <slot />
+      </main>
+    </div>
+  </body>
+</html>

@@ -1,4 +1,5 @@
 ---
+import DashboardLayout from "../../../layouts/DashboardLayout.astro";
 import { prisma } from "../../../lib/db";
 import { getSessionFromRequest } from "../../../lib/auth";
 
@@ -13,27 +14,46 @@ if (!network) return Astro.redirect("/dashboard");
 const roles = await prisma.networkRole.findMany({ where: { networkId: network.id }, orderBy: { createdAt: "desc" } });
 const msg = Astro.url.searchParams.get("msg");
 ---
-<html lang="en">
-<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Roles</title></head>
-<body style="font-family: system-ui; margin: 40px;">
-  <h1>Network roles</h1>
-  <p><a href="/dashboard">← Dashboard</a></p>
-  {msg && <p style="color: green;">{msg}</p>}
+<DashboardLayout
+  title="Roles"
+  username={session?.user?.name || user.discordId}
+  avatarUrl={session?.avatarUrl}
+>
+  <h1 class="page-title">Network Roles</h1>
+  <p style="color: var(--color-text-muted); margin-bottom: 24px;">Create roles that can be assigned to members across your network.</p>
 
-  <form method="post" action="/api/network/roles/create" style="display:flex; gap:8px; align-items:center; margin: 16px 0;">
-    <input name="name" placeholder="Role name" style="padding:8px; width:240px;" />
-    <input name="description" placeholder="Description (optional)" style="padding:8px; width:360px;" />
-    <button style="padding:8px 12px;">Create</button>
-  </form>
+  {msg && <div class="message message-success">{msg}</div>}
 
-  <ul>
-    {roles.map(r => (
-      <li>
-        <b>{r.name}</b> — {r.description || ""}
-        {" "}<a href={`/dashboard/roles/mapping?id=${r.id}`}>Mapping</a>
-      </li>
-    ))}
-  </ul>
-</body>
-</html>
+  <div class="card">
+    <div class="card-title">Create New Role</div>
+    <form method="post" action="/api/network/roles/create" class="form-row">
+      <input type="text" name="name" placeholder="Role name" style="width: 200px;" required />
+      <input type="text" name="description" placeholder="Description (optional)" style="width: 300px;" />
+      <button type="submit">Create Role</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Existing Roles</div>
+    {roles.length > 0 ? (
+      <ul class="item-list">
+        {roles.map(r => (
+          <li>
+            <div>
+              <span class="item-name">{r.name}</span>
+              {r.description && <span class="item-desc">{r.description}</span>}
+            </div>
+            <a href={`/dashboard/roles/mapping?id=${r.id}`} class="btn btn-secondary" style="padding: 6px 12px; font-size: 13px;">
+              Configure Mapping
+            </a>
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <div class="empty-state">
+        <p>No roles created yet.</p>
+        <p style="font-size: 13px;">Create a role above to get started.</p>
+      </div>
+    )}
+  </div>
+</DashboardLayout>
