@@ -35,9 +35,11 @@ export function authHandler(req: Request) {
         return session;
       },
       async redirect({ url }) {
-        if (url.startsWith("/")) return `${PUBLIC_APP_URL}${url}`;
-        if (url.startsWith(PUBLIC_APP_URL)) return url;
-        return PUBLIC_APP_URL;
+        // Normalize PUBLIC_APP_URL by removing trailing slash to prevent double slashes
+        const baseUrl = PUBLIC_APP_URL.replace(/\/$/, "");
+        if (url.startsWith("/")) return `${baseUrl}${url}`;
+        if (url.startsWith(PUBLIC_APP_URL) || url.startsWith(baseUrl)) return url;
+        return baseUrl;
       },
     },
   });
