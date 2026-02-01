@@ -5,6 +5,8 @@ export default defineConfig({
   output: "server",
   adapter: netlify(),
 
-  // Netlify adapter currently doesn't support Astro "assets"
-  assets: false,
+  // ✅ Force-disable Astro assets feature (Netlify adapter currently fails when it's enabled)
+  experimental: {
+    assets: false,
+  },
 });
