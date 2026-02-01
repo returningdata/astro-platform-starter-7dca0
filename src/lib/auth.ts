@@ -10,6 +10,7 @@ export function authHandler(req: Request) {
   return Auth(req, {
     secret: AUTH_SECRET,
     trustHost: true,
+    basePath: "/api/auth",
     providers: [
       Discord({
         clientId: DISCORD_CLIENT_ID,
